@@ -3,7 +3,7 @@ import books from "../models/Book.js";
 class BooksController {
   static listBook = async (req, res) => {
     try {
-      const searchedBooks = await books.find();
+      const searchedBooks = await books.find().populate("author").exec();
       res.status(200).json(searchedBooks);
     } catch (error) {
       console.log("Error fetching books: ", error);
@@ -14,11 +14,14 @@ class BooksController {
   static listBookById = (req, res) => {
     const id = req.params.id;
 
-    books.findById(id, (error, books) => {
-      error
-        ? res.status(400).send({ message: error.message })
-        : res.status(200).send(books);
-    });
+    books
+      .findById(id)
+      .populate("author", "name")
+      .exec((error, books) => {
+        error
+          ? res.status(400).send({ message: error.message })
+          : res.status(200).send(books);
+      });
   };
 
   static registerBook = (req, res) => {
@@ -55,6 +58,36 @@ class BooksController {
         ? res.status(500).send({ message: error.message })
         : res.status(200).send({ message: "Book removed successfully" });
     });
+  };
+
+  static listBookByPublisher = (req, res) => {
+    const publisher = req.query.publisher;
+
+    if (!publisher) {
+      return res
+        .status(400)
+        .send({ message: "The 'publisher' param is required" });
+    }
+
+    try {
+      books.find({ publisher: publisher }, {}, (error, books) => {
+        if (error) {
+          res.status(500).send({ message: "Error to search on database" });
+        } else {
+          const matchingBooks = books.filter((book) => {
+            return book.publisher.toLowerCase() === publisher.toLowerCase();
+          });
+
+          if (matchingBooks.length === 0) {
+            return res.status(404).send({ message: "Book not found" });
+          }
+
+          res.status(200).send(matchingBooks);
+        }
+      });
+    } catch (error) {
+      res.status(404).send({ message: error.message });
+    }
   };
 }
 

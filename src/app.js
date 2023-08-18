@@ -8,7 +8,6 @@ db.once("open", () => {
 });
 
 const app = express();
-
 routes(app);
 
 export default app;
