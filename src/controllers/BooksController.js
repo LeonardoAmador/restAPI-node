@@ -7,60 +7,63 @@ class BooksController {
       res.status(200).json(searchedBooks);
     } catch (error) {
       console.log("Error fetching books: ", error);
-      res.status(500).json({ error: "Error getting book." });
+      res.status(500).json({ error: "Internal error." });
     }
   };
 
-  static listBookById = (req, res) => {
+  static listBookById = async (req, res) => {
     const id = req.params.id;
 
-    books
-      .findById(id)
-      .populate("author", "name")
-      .exec((error, books) => {
-        error
-          ? res.status(400).send({ message: error.message })
-          : res.status(200).send(books);
-      });
+    try {
+      const bookList = await books
+        .findById(id)
+        .populate("author", "name")
+        .exec();
+
+      res.status(200).send(bookList);
+    } catch (error) {
+      res.status(400).send({ message: error.message });
+    }
   };
 
-  static registerBook = (req, res) => {
-    let book = new books(req.body);
+  static registerBook = async (req, res) => {
+    const book = new books(req.body);
 
-    book.save((error) => {
-      if (error) {
-        res
-          .status(500)
-          .send({ message: `${error.message} - failed to register book.` });
-      } else {
-        res.status(201).send(book.toJSON());
-      }
-    });
+    try {
+      const savedBook = await book.save();
+
+      res.status(201).send(savedBook.toJSON());
+    } catch (error) {
+      res
+        .status(500)
+        .send({ message: `${error.message} - failed to register book.` });
+    }
   };
 
-  static updateBook = (req, res) => {
+  static updateBook = async (req, res) => {
     const id = req.params.id;
 
-    books.findByIdAndUpdate(id, { $set: req.body }, (error) => {
-      if (!error) {
-        res.status(200).send({ message: "Book updated successfully" });
-      } else {
-        res.status(500).send({ message: error.message });
-      }
-    });
+    try {
+      await books.findByIdAndUpdate(id, { $set: req.body });
+
+      res.send(200).send({ message: "Book updated successfully" });
+    } catch (error) {
+      res.status(500).send({ message: error.message });
+    }
   };
 
-  static deleteBook = (req, res) => {
+  static deleteBook = async (req, res) => {
     const id = req.params.id;
 
-    books.findByIdAndDelete(id, (error) => {
-      error
-        ? res.status(500).send({ message: error.message })
-        : res.status(200).send({ message: "Book removed successfully" });
-    });
+    try {
+      await books.findByIdAndDelete(id);
+      res.status(200).send({ message: "Book removed successfully" });
+    } catch (error) {
+      res.status(500).send({ message: error.message });
+    }
   };
 
-  static listBookByPublisher = (req, res) => {
+  static listBookByPublisher = async (req, res) => {
     const publisher = req.query.publisher;
 
     if (!publisher) {
@@ -70,23 +73,15 @@ class BooksController {
     }
 
     try {
-      books.find({ publisher: publisher }, {}, (error, books) => {
-        if (error) {
-          res.status(500).send({ message: "Error to search on database" });
-        } else {
-          const matchingBooks = books.filter((book) => {
-            return book.publisher.toLowerCase() === publisher.toLowerCase();
-          });
+      const bookList = await books.find({ publisher: publisher });
 
-          if (matchingBooks.length === 0) {
-            return res.status(404).send({ message: "Book not found" });
-          }
+      if (bookList.length === 0) {
+        return res.status(404).send({ message: "Book not found" });
+      }
 
-          res.status(200).send(matchingBooks);
-        }
-      });
+      res.status(200).send(bookList);
     } catch (error) {
-      res.status(404).send({ message: error.message });
+      res.status(500).send({ message: "Error searching the database" });
     }
   };
 }
