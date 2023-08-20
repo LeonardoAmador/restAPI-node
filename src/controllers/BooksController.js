@@ -1,17 +1,16 @@
 import books from "../models/Book.js";
 
 class BooksController {
-  static listBook = async (req, res) => {
+  static listBook = async (req, res, next) => {
     try {
       const searchedBooks = await books.find().populate("author").exec();
       res.status(200).json(searchedBooks);
     } catch (error) {
-      console.log("Error fetching books: ", error);
-      res.status(500).json({ error: "Internal error." });
+      next(error);
     }
   };
 
-  static listBookById = async (req, res) => {
+  static listBookById = async (req, res, next) => {
     const id = req.params.id;
 
     try {
@@ -22,11 +21,11 @@ class BooksController {
 
       res.status(200).send(bookList);
     } catch (error) {
-      res.status(400).send({ message: error.message });
+      next(error);
     }
   };
 
-  static registerBook = async (req, res) => {
+  static registerBook = async (req, res, next) => {
     const book = new books(req.body);
 
     try {
@@ -34,13 +33,11 @@ class BooksController {
 
       res.status(201).send(savedBook.toJSON());
     } catch (error) {
-      res
-        .status(500)
-        .send({ message: `${error.message} - failed to register book.` });
+      next(error);
     }
   };
 
-  static updateBook = async (req, res) => {
+  static updateBook = async (req, res, next) => {
     const id = req.params.id;
 
     try {
@@ -48,22 +45,22 @@ class BooksController {
 
       res.send(200).send({ message: "Book updated successfully" });
     } catch (error) {
-      res.status(500).send({ message: error.message });
+      next(error);
     }
   };
 
-  static deleteBook = async (req, res) => {
+  static deleteBook = async (req, res, next) => {
     const id = req.params.id;
 
     try {
       await books.findByIdAndDelete(id);
       res.status(200).send({ message: "Book removed successfully" });
     } catch (error) {
-      res.status(500).send({ message: error.message });
+      next(error);
     }
   };
 
-  static listBookByPublisher = async (req, res) => {
+  static listBookByPublisher = async (req, res, next) => {
     const publisher = req.query.publisher;
 
     if (!publisher) {
@@ -81,7 +78,7 @@ class BooksController {
 
       res.status(200).send(bookList);
     } catch (error) {
-      res.status(500).send({ message: "Error searching the database" });
+      next(error);
     }
   };
 }
