@@ -1,18 +1,19 @@
 import mongoose from "mongoose";
+import BaseError from "../errors/BaseError.js";
+import IncorrectRequest from "../errors/IncorrectRequest.js";
+import ValidationError from "../errors/ValidationError.js";
 
 // eslint-disable-next-line no-unused-vars
 const errorsHandler = (error, req, res, next) => {
-  console.log(error);
-
   if (error instanceof mongoose.Error.CastError) {
-    res
-      .status(400)
-      .send({ message: "One or more provided datas are incorrect." });
-  } else {
-    res
-      .status(500)
-      .send({ message: `Internal server error - ${error.message}` });
+    new IncorrectRequest().sendResponse(res);
   }
+
+  if (error instanceof mongoose.Error.ValidationError) {
+    new ValidationError(error).sendResponse(res);
+  }
+
+  new BaseError().sendResponse(res);
 };
 
 export default errorsHandler;
