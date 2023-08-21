@@ -13,9 +13,13 @@ const schemaBook = new mongoose.Schema({
   },
   publisher: { 
     type: String, 
-    required: [true, "The publisher is required"] 
+    required: [true, "The publisher is required"],
   },
-  pagesNumber: { type: Number },
+  pagesNumber: { 
+    type: Number,
+    min: 10,
+    max: 5000 
+  },
 }
 );
 

@@ -1,3 +1,4 @@
+import NotFound from "../errors/NotFound.js";
 import books from "../models/Book.js";
 
 class BooksController {
@@ -18,8 +19,12 @@ class BooksController {
         .findById(id)
         .populate("author", "name")
         .exec();
-
-      res.status(200).send(bookList);
+      
+      if (bookList !== null) {
+        res.status(200).send(bookList);
+      } else {
+        next(new NotFound("Book id not found"));
+      }
     } catch (error) {
       next(error);
     }
@@ -41,9 +46,13 @@ class BooksController {
     const id = req.params.id;
 
     try {
-      await books.findByIdAndUpdate(id, { $set: req.body });
+      const updatedBook = await books.findByIdAndUpdate(id, { $set: req.body });
 
-      res.send(200).send({ message: "Book updated successfully" });
+      if (updatedBook !== null) {
+        res.send(200).send({ message: "Book updated successfully" });
+      } else {
+        next(new NotFound("Book id not found"));
+      }
     } catch (error) {
       next(error);
     }
@@ -53,8 +62,13 @@ class BooksController {
     const id = req.params.id;
 
     try {
-      await books.findByIdAndDelete(id);
-      res.status(200).send({ message: "Book removed successfully" });
+      const deletedBook = await books.findByIdAndDelete(id);
+      
+      if (deletedBook !== null) {
+        res.status(200).send({ message: "Book removed successfully" });
+      } else {
+        next(new NotFound("Book id not found"));
+      }
     } catch (error) {
       next(error);
     }

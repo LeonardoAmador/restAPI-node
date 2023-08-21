@@ -1,3 +1,4 @@
+import NotFound from "../errors/NotFound.js";
 import authors from "../models/Author.js";
 class AuthorsController {
   static listAuthors = async (req, res) => {
@@ -18,7 +19,7 @@ class AuthorsController {
 
       authorFound !== null
         ? res.status(200).send(authorFound)
-        : res.status(404).send({ message: "Author id not found." });
+        : next(new NotFound(`Author id ${id} not found`));
     } catch (error) {
       next(error);
     }
@@ -47,14 +48,14 @@ class AuthorsController {
         $set: req.body,
       });
 
-      if (!updatedAuthor) {
-        return res.status(404).send({ message: "Author not found." });
+      if (updatedAuthor !== null) {
+        res.status(200).send({
+          message: "Author updated successfully",
+          updatedAuthor: updatedAuthor,
+        });
+      } else {
+        next(new NotFound("Author id not found"));
       }
-
-      res.status(200).send({
-        message: "Author updated successfully",
-        updatedAuthor: updatedAuthor,
-      });
     } catch (error) {
       next(error);
     }
@@ -66,11 +67,11 @@ class AuthorsController {
     try {
       const deletedAuthor = await authors.findByIdAndDelete(id);
 
-      if (!deletedAuthor) {
-        res.status(404).send({ message: `Author ${id} not found.` });
+      if (deletedAuthor !== null) {
+        res.status(200).send({ message: "Author removed successfully" });
+      } else {
+        next(new NotFound("Author id not found"));
       }
-
-      res.status(200).send({ message: "Author removed successfully" });
     } catch (error) {
       next(error);
     }
