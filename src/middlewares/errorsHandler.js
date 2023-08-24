@@ -2,7 +2,6 @@ import mongoose from "mongoose";
 import BaseError from "../errors/BaseError.js";
 import IncorrectRequest from "../errors/IncorrectRequest.js";
 import ValidationError from "../errors/ValidationError.js";
-import NotFound from "../errors/NotFound.js";
 
 // eslint-disable-next-line no-unused-vars
 const errorsHandler = (error, req, res, next) => {
@@ -14,7 +13,7 @@ const errorsHandler = (error, req, res, next) => {
     new ValidationError(error).sendResponse(res);
   }
 
-  if (error instanceof NotFound) {
+  if (error instanceof BaseError) {
     error.sendResponse(res);
   }
 

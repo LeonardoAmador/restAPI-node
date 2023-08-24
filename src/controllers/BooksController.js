@@ -1,11 +1,26 @@
 import NotFound from "../errors/NotFound.js";
+import IncorrectRequest from "../errors/IncorrectRequest.js";
 import { authors, books } from "../models/index.js";
 
 class BooksController {
   static listBook = async (req, res, next) => {
     try {
-      const searchedBooks = await books.find().populate("author").exec();
-      res.status(200).json(searchedBooks);
+      let { limit = 5, page = 1 } = req.query;
+
+      limit = parseInt(limit);
+      page = parseInt(page);
+
+      if (page > 0 && page > 0) {
+        const searchedBooks = await books
+          .find()
+          .skip((page - 1) * limit)
+          .limit(limit)
+          .populate("author")
+          .exec();
+        res.status(200).json(searchedBooks);
+      } else {
+        next(new IncorrectRequest());
+      }
     } catch (error) {
       next(error);
     }
