@@ -1,10 +1,13 @@
 import NotFound from "../errors/NotFound.js";
 import { authors } from "../models/index.js";
 class AuthorsController {
-  static listAuthors = async (req, res) => {
+  static listAuthors = async (req, res, next) => {
     try {
-      const searchedAuthors = await authors.find();
-      res.status(200).json(searchedAuthors);
+      const searchedAuthors = authors.find();
+
+      req.result = searchedAuthors;
+      
+      next();
     } catch (error) {
       console.log("Error fetching authors: ", error);
       res.status(500).json({ error: "Internal server error." });

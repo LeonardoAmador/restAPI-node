@@ -1,26 +1,14 @@
 import NotFound from "../errors/NotFound.js";
-import IncorrectRequest from "../errors/IncorrectRequest.js";
 import { authors, books } from "../models/index.js";
 
 class BooksController {
   static listBook = async (req, res, next) => {
     try {
-      let { limit = 5, page = 1 } = req.query;
-
-      limit = parseInt(limit);
-      page = parseInt(page);
-
-      if (page > 0 && page > 0) {
-        const searchedBooks = await books
-          .find()
-          .skip((page - 1) * limit)
-          .limit(limit)
-          .populate("author")
-          .exec();
-        res.status(200).json(searchedBooks);
-      } else {
-        next(new IncorrectRequest());
-      }
+      const searchBooks = books.find();
+      
+      req.result = searchBooks;
+      
+      next();
     } catch (error) {
       next(error);
     }
@@ -94,13 +82,11 @@ class BooksController {
       const search = await processSearch(req.query);
 
       if (search !== null) {
-        const bookList = await books.find(search).populate("author");
+        const bookList = books.find(search).populate("author");
 
-        if (bookList.length === 0) {
-          return res.status(404).send({ message: "Book not found" });
-        }
-
-        res.status(200).send(bookList);
+        req.result = bookList;
+        
+        next();
       } else {
         res.status(200).send([]);
       }
